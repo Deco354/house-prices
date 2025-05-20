@@ -18,9 +18,6 @@ assert zip_path.exists()
 with ZipFile(zip_path, "r") as zip_ref:
     zip_ref.extractall(data_dir)
 
-csv_files = list(data_dir.glob("*.csv"))
-
-# Read and display the first 5 rows of each CSV file
-for file in csv_files:
-    df = pd.read_csv(file)
-    print(df.head())
+train_df = pd.read_csv(data_dir / "train.csv")
+test_df = pd.read_csv(data_dir / "test.csv")
+sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
