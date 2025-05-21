@@ -88,4 +88,11 @@ test_predictions_original = test_predictions * y.std() + y.mean()
 submission_df = pd.DataFrame(
     {"Id": test_df.Id, "SalePrice": test_predictions_original.flatten()}
 )
-submission_df.to_csv("submission.csv", index=False)
+submission_csv = submission_df.to_csv("submission.csv", index=False)
+
+# Upload to Kaggle
+kaggle.api.competition_submit(
+    "submission.csv",
+    "House Price Prediction",
+    competition,
+)
