@@ -6,6 +6,7 @@ from zipfile import ZipFile
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
 # Create data directory if it doesn't exist
 data_dir = Path("data")
@@ -59,3 +60,14 @@ model.fit(X_train, y_train)
 # Make predictions
 train_predictions = model.predict(X_train)
 val_predictions = model.predict(X_val)
+
+# Calculate metrics
+train_rmse = mean_squared_error(y_train, train_predictions, squared=False)
+val_rmse = mean_squared_error(y_val, val_predictions, squared=False)
+train_r2 = r2_score(y_train, train_predictions)
+val_r2 = r2_score(y_val, val_predictions)
+
+print(f"Training RMSE: {train_rmse:.2f}")
+print(f"Validation RMSE: {val_rmse:.2f}")
+print(f"Training R²: {train_r2:.2f}")
+print(f"Validation R²: {val_r2:.2f}")
