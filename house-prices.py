@@ -55,3 +55,7 @@ X_train, X_val, y_train, y_val = train_test_split(
 # Create and train the model
 model = LinearRegression()
 model.fit(X_train, y_train)
+
+# Make predictions
+train_predictions = model.predict(X_train)
+val_predictions = model.predict(X_val)
