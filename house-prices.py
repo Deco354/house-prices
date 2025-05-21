@@ -71,3 +71,21 @@ print(f"Training RMSE: {train_rmse:.2f}")
 print(f"Validation RMSE: {val_rmse:.2f}")
 print(f"Training R²: {train_r2:.2f}")
 print(f"Validation R²: {val_r2:.2f}")
+
+# Make predictions on the test set
+## See how sample submission is structured
+print(sample_submission_df)
+
+## Make predictions on the test set
+x_test = test_df[features]
+x_test_scaled = scaler.transform(x_test)
+test_predictions = model.predict(x_test_scaled)
+
+# Transform predictions back to original scale
+test_predictions_original = test_predictions * y.std() + y.mean()
+
+# Create submission file
+submission_df = pd.DataFrame(
+    {"Id": test_df.Id, "SalePrice": test_predictions_original.flatten()}
+)
+submission_df.to_csv("submission.csv", index=False)
