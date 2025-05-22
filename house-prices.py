@@ -43,23 +43,29 @@ x.isna().sum()
 train_df["GrLivArea"].hist()
 y.hist()
 
-# Scale the features and target variable
-scaler = StandardScaler()
-x_scaled = scaler.fit_transform(x)
-y_scaled = (y - y.mean()) / y.std()
-
 # Split the data into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(
-    x_scaled, y_scaled, test_size=0.2, random_state=42
-)
+# It's important to split the data before scaling the features
+# because the scaler will use the training data to scale the features
+# and the validation data will be scaled using the training data statistics
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+
+# Scale the features and target variable
+# We use fit_transform on the training data to learn the mean and standard deviation of the training data
+# We use transform on the validation data to scale it using the training data statistics.
+# The mean and standard deviation of the validation data should not be used because it will bias the model
+scaler = StandardScaler()
+x_train_scaled = scaler.fit_transform(x_train)
+x_val_scaled = scaler.transform(x_val)
+y_train_scaled = (y_train - y_train.mean()) / y_train.std()
+y_val_scaled = (y_val - y_train.mean()) / y_train.std()
 
 # Create and train the model
 model = LinearRegression()
-model.fit(X_train, y_train)
+model.fit(x_train_scaled, y_train_scaled)
 
 # Make predictions
-train_predictions = model.predict(X_train)
-val_predictions = model.predict(X_val)
+train_predictions = model.predict(x_train_scaled)
+val_predictions = model.predict(x_val_scaled)
 
 # Calculate metrics
 train_rmse = mean_squared_error(y_train, train_predictions, squared=False)
