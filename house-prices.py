@@ -91,8 +91,9 @@ submission_df = pd.DataFrame(
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
 # Upload to Kaggle
-kaggle.api.competition_submit(
-    "submission.csv",
-    "House Price Prediction",
-    competition,
-)
+if False:
+    kaggle.api.competition_submit(
+        "submission.csv",
+        "House Price Prediction",
+        competition,
+    )
