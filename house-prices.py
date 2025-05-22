@@ -56,12 +56,10 @@ x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_st
 scaler = StandardScaler()
 x_train_scaled = scaler.fit_transform(x_train)
 x_val_scaled = scaler.transform(x_val)
-y_train_scaled = (y_train - y_train.mean()) / y_train.std()
-y_val_scaled = (y_val - y_train.mean()) / y_train.std()
 
 # Create and train the model
 model = LinearRegression()
-model.fit(x_train_scaled, y_train_scaled)
+model.fit(x_train_scaled, y_train)
 
 # Make predictions
 train_predictions = model.predict(x_train_scaled)
