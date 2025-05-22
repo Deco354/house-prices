@@ -39,9 +39,11 @@ x.describe()
 # Check if data has na values
 x.isna().sum()
 
-# Create histogram of GrLivArea using pandas to check if there are significant outliers
+# Check for outliers
 train_df["GrLivArea"].hist()
-y.hist()
+train_df["SalePrice"].hist()
+train_df["GrLivArea"].describe()
+train_df["SalePrice"].describe()
 
 # Split the data into training and validation sets
 # It's important to split the data before scaling the features
