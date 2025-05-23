@@ -54,7 +54,7 @@ data_df["SalePrice"].describe()
 # It's important to split the data before scaling the features
 # because the scaler will use the training data to scale the features
 # and the validation data will be scaled using the training data statistics
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 pd.concat([x_train, y_train], axis=1).describe()
 pd.concat([x_val, y_val], axis=1).describe()
 
