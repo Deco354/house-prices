@@ -49,7 +49,7 @@ data_df["SalePrice"].describe()
 # It's important to split the data before scaling the features
 # because the scaler will use the training data to scale the features
 # and the validation data will be scaled using the training data statistics
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
 pd.concat([x_train, y_train], axis=1).describe()
 pd.concat([x_val, y_val], axis=1).describe()
 
@@ -75,6 +75,7 @@ val_rmse = mean_squared_error(y_val, val_predictions, squared=False)
 train_r2 = r2_score(y_train, train_predictions)
 val_r2 = r2_score(y_val, val_predictions)
 
+## This initial model is not very accurate so the validation R2 will vary quite a bit
 print(f"Training RMSE: {train_rmse:.2f}")
 print(f"Validation RMSE: {val_rmse:.2f}")
 print(f"Training R²: {train_r2:.2f}")
