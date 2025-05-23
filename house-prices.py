@@ -22,28 +22,28 @@ assert zip_path.exists()
 with ZipFile(zip_path, "r") as zip_ref:
     zip_ref.extractall(data_dir)
 
-train_df = pd.read_csv(data_dir / "train.csv")
+data_df = pd.read_csv(data_dir / "train.csv")
 test_df = pd.read_csv(data_dir / "test.csv")
 sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
 
 # View Columns and select features and target variable
 
-train_df.columns
+data_df.columns
 features = ["GrLivArea", "YearBuilt", "FullBath", "BedroomAbvGr", "TotRmsAbvGrd"]
-x = train_df[features]
-train_df.GrLivArea.mean()
-train_df.GrLivArea.std()
-y = train_df.SalePrice
+x = data_df[features]
+data_df.GrLivArea.mean()
+data_df.GrLivArea.std()
+y = data_df.SalePrice
 x.describe()
 
 # Check if data has na values
 x.isna().sum()
 
 # Check for outliers
-train_df["GrLivArea"].hist()
-train_df["SalePrice"].hist()
-train_df["GrLivArea"].describe()
-train_df["SalePrice"].describe()
+data_df["GrLivArea"].hist()
+data_df["SalePrice"].hist()
+data_df["GrLivArea"].describe()
+data_df["SalePrice"].describe()
 
 # Split the data into training and validation sets
 # It's important to split the data before scaling the features
