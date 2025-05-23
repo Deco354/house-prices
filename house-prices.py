@@ -1,26 +1,31 @@
-import kaggle
 import pandas as pd
-import matplotlib.pyplot as plt
 from pathlib import Path
 from zipfile import ZipFile
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+import os
 
 # Create data directory if it doesn't exist
-data_dir = Path("data")
-data_dir.mkdir(exist_ok=True)
+iskaggle = os.environ.get("KAGGLE_KERNEL_RUN_TYPE", "")
+if iskaggle:
+    data_dir = Path("/kaggle/input/home-data-for-ml-course")
+else:
+    import kaggle
 
-# Download competition data
-competition = "home-data-for-ml-course"
-kaggle.api.competition_download_files(competition, path=data_dir)
-zip_path = data_dir / f"{competition}.zip"
-assert zip_path.exists()
+    data_dir = Path("data")
+    data_dir.mkdir(exist_ok=True)
 
-# Extract the zip file
-with ZipFile(zip_path, "r") as zip_ref:
-    zip_ref.extractall(data_dir)
+    # Download competition data
+    competition = "home-data-for-ml-course"
+    kaggle.api.competition_download_files(competition, path=data_dir)
+    zip_path = data_dir / f"{competition}.zip"
+    assert zip_path.exists()
+
+    # Extract the zip file
+    with ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall(data_dir)
 
 data_df = pd.read_csv(data_dir / "train.csv")
 test_df = pd.read_csv(data_dir / "test.csv")
@@ -100,7 +105,7 @@ submission_df = pd.DataFrame(
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
 # Upload to Kaggle
-if False:
+if False and not iskaggle:
     kaggle.api.competition_submit(
         "submission.csv",
         "House Price Prediction",
