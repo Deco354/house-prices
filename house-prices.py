@@ -95,12 +95,9 @@ x_test = test_df[features]
 x_test_scaled = scaler.transform(x_test)
 test_predictions = model.predict(x_test_scaled)
 
-# Transform predictions back to original scale
-test_predictions_original = test_predictions * y.std() + y.mean()
-
 # Create submission file
 submission_df = pd.DataFrame(
-    {"Id": test_df.Id, "SalePrice": test_predictions_original.flatten()}
+    {"Id": test_df.Id, "SalePrice": test_predictions.flatten()}
 )
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
