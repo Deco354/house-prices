@@ -49,7 +49,7 @@ features = features.drop(["LotFrontage", "GarageYrBlt"])
 selected_columns = list(features) + ["SalePrice"]
 data_df = data_df_original[selected_columns]
 data_df.isna().sum()
-data_df = data_df.dropna()
+data_df = data_df.fillna(0)
 
 # Split the data into training and validation sets and check their distributions
 # It's important to split the data before scaling the features
