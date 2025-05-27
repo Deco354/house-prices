@@ -44,11 +44,6 @@ x.describe()
 # Check if data has na values
 x.isna().sum()
 
-# Check for outliers
-data_df["GrLivArea"].hist()
-data_df["SalePrice"].hist()
-data_df["GrLivArea"].describe()
-data_df["SalePrice"].describe()
 
 # Split the data into training and validation sets and check their distributions
 # It's important to split the data before scaling the features
