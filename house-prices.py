@@ -45,11 +45,21 @@ na_feature_counts = na_feature_counts[na_feature_counts > 0]
 ## LotFrontage and GarageYrBlt have a lot of na values so we'll drop them for now
 features = features.drop(["LotFrontage", "GarageYrBlt"])
 
-## Filter Data
+
+## Fill na values with 0
+def handle_na(df):
+    return df.fillna(0)
+
+
+## Preprocess data
+def preprocess_data(df, columns):
+    df = df[columns]
+    df = handle_na(df)
+    return df
+
+
 selected_columns = list(features) + ["SalePrice"]
-data_df = data_df_original[selected_columns]
-data_df.isna().sum()
-data_df = data_df.fillna(0)
+data_df = preprocess_data(data_df, selected_columns)
 
 # Split the data into training and validation sets and check their distributions
 # It's important to split the data before scaling the features
@@ -93,11 +103,12 @@ print(f"Validation R²: {val_r2:.2f}")
 ## See how sample submission is structured
 print(sample_submission_df)
 
-## Make predictions on the test set
+## Check test set n/as
 test_df_original
-test_df = test_df[features]
 test_df.isna().sum()
-test_df = test_df.fillna(0)
+
+## Preprocess test set
+test_df = preprocess_data(test_df, features)
 test_scaled = scaler.transform(test_df)
 test_predictions = model.predict(test_scaled)
 
