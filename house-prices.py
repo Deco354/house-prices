@@ -52,31 +52,44 @@ features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
 numeric_features = numeric_features.drop(features_to_drop)
 
 
+# Scale the features, only fit the scaler on training data
+def scale_data(df, scaler: StandardScaler, is_training: bool):
+    if is_training:
+        return scaler.fit_transform(df)
+    else:
+        return scaler.transform(df)
+
+
 # Preprocess data function, we'll need to keep this step consistent for all our datasets
-def preprocess_data(df, selected_columns):
-    # Select only the chosen columns
+def preprocess_data(df, selected_columns, scaler: StandardScaler, is_training: bool):
     df = df[selected_columns]
-    # Fill NA values with 0
     df = df.fillna(0)
+    df = scale_data(df, scaler, is_training)
     return df
 
 
 # Preprocess training and validation sets
-x_train_processed = preprocess_data(x_train, numeric_features)
-x_val_processed = preprocess_data(x_val, numeric_features)
-
-# Scale the features
 scaler = StandardScaler()
-x_train_scaled = scaler.fit_transform(x_train_processed)
-x_val_scaled = scaler.transform(x_val_processed)
+x_train_processed = preprocess_data(
+    x_train,
+    numeric_features,
+    scaler,
+    is_training=True,
+)
+x_val_processed = preprocess_data(
+    x_val,
+    numeric_features,
+    scaler,
+    is_training=False,
+)
 
 # Create and train the model
 model = LinearRegression()
-model.fit(x_train_scaled, y_train)
+model.fit(x_train_processed, y_train)
 
 # Make predictions
-train_predictions = model.predict(x_train_scaled)
-val_predictions = model.predict(x_val_scaled)
+train_predictions = model.predict(x_train_processed)
+val_predictions = model.predict(x_val_processed)
 
 # Calculate metrics
 train_rmse = mean_squared_error(y_train, train_predictions, squared=False)
@@ -90,9 +103,13 @@ print(f"Training R²: {train_r2:.2f}")
 print(f"Validation R²: {val_r2:.2f}")
 
 # Preprocess test set using the same selected columns
-test_processed = preprocess_data(test_df, numeric_features)
-test_scaled = scaler.transform(test_processed)
-test_predictions = model.predict(test_scaled)
+test_processed = preprocess_data(
+    test_df,
+    numeric_features,
+    scaler,
+    is_training=False,
+)
+test_predictions = model.predict(test_processed)
 
 # Create submission file
 submission_df = pd.DataFrame(
