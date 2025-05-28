@@ -66,8 +66,10 @@ def scale_data(df, scaler: StandardScaler, is_training: bool):
 
 
 # Preprocess data function, we'll need to keep this step consistent for all our datasets
-def preprocess_data(df, selected_columns, scaler: StandardScaler, is_training: bool):
-    df = df[selected_columns]
+def preprocess_data(
+    df, feature_column_names, scaler: StandardScaler, is_training: bool
+):
+    df = df[feature_column_names]
     df = df.fillna(0)
     df = scale_data(df, scaler, is_training)
     return df
