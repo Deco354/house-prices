@@ -7,6 +7,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import os
 
+SHOULD_SUBMIT_TO_KAGGLE = False
+RANDOM_SEED = 42
+
 # Create data directory if it doesn't exist
 iskaggle = os.environ.get("KAGGLE_KERNEL_RUN_TYPE", "")
 if iskaggle:
@@ -36,7 +39,9 @@ sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
 # Split the data into training and validation sets before any preprocessing
 x = data_df.drop("SalePrice", axis=1)
 y = data_df["SalePrice"]
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+x_train, x_val, y_train, y_val = train_test_split(
+    x, y, test_size=0.2, random_state=RANDOM_SEED
+)
 
 # Select Features
 ## Make a list of numeric features
@@ -118,7 +123,7 @@ submission_df = pd.DataFrame(
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
 # Upload to Kaggle
-if False and not iskaggle:
+if SHOULD_SUBMIT_TO_KAGGLE and not iskaggle:
     kaggle.api.competition_submit(
         "submission.csv",
         "House Price Prediction",
