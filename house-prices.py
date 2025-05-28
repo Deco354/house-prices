@@ -11,8 +11,8 @@ SHOULD_SUBMIT_TO_KAGGLE = False
 RANDOM_SEED = 42
 
 # Create data directory if it doesn't exist
-iskaggle = os.environ.get("KAGGLE_KERNEL_RUN_TYPE", "")
-if iskaggle:
+is_running_on_kaggle = os.environ.get("KAGGLE_KERNEL_RUN_TYPE", "")
+if is_running_on_kaggle:
     data_dir = Path("/kaggle/input/home-data-for-ml-course")
 else:
     import kaggle
@@ -123,7 +123,7 @@ submission_df = pd.DataFrame(
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
 # Upload to Kaggle
-if SHOULD_SUBMIT_TO_KAGGLE and not iskaggle:
+if SHOULD_SUBMIT_TO_KAGGLE and not is_running_on_kaggle:
     kaggle.api.competition_submit(
         "submission.csv",
         "House Price Prediction",
