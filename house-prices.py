@@ -33,51 +33,42 @@ data_df = data_df_original.copy()
 test_df = test_df_original.copy()
 sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
 
-# Create feature list only of numeric columns minus the Target variable
-data_df.columns
-features = data_df.select_dtypes(include="number").columns
-features = features.drop("SalePrice")
-
-# Check for na values in all datasets
-all_data_df = pd.concat([data_df_original, test_df_original])
-na_feature_counts = all_data_df[features].isna().sum()
-na_feature_counts = na_feature_counts[na_feature_counts > 0]
-## LotFrontage and GarageYrBlt have a lot of na values so we'll drop them for now
-features = features.drop(["LotFrontage", "GarageYrBlt"])
-
-
-## Fill na values with 0
-def handle_na(df):
-    return df.fillna(0)
-
-
-## Preprocess data
-def preprocess_data(df, columns):
-    df = df[columns]
-    df = handle_na(df)
-    return df
-
-
-selected_columns = list(features) + ["SalePrice"]
-data_df = preprocess_data(data_df, selected_columns)
-
-# Split the data into training and validation sets and check their distributions
-# It's important to split the data before scaling the features
-# because the scaler will use the training data to scale the features
-# and the validation data will be scaled using the training data statistics
+# Split the data into training and validation sets before any preprocessing
 x = data_df.drop("SalePrice", axis=1)
 y = data_df["SalePrice"]
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
-pd.concat([x_train, y_train], axis=1).describe()
-pd.concat([x_val, y_val], axis=1).describe()
 
-# Scale the features and target variable
-# We use fit_transform on the training data to learn the mean and standard deviation of the training data
-# We use transform on the validation data to scale it using the training data statistics.
-# The mean and standard deviation of the validation data should not be used because it will bias the model
+# Select Features
+## Make a list of numeric features
+numeric_features = data_df.select_dtypes(include="number").columns
+numeric_features = numeric_features.drop("SalePrice")
+
+## Analyze NA values
+na_feature_counts = data_df[numeric_features].isna().sum()
+na_feature_counts = na_feature_counts[na_feature_counts > 0]
+
+## Drop features with too many NA values
+features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
+numeric_features = numeric_features.drop(features_to_drop)
+
+
+# Preprocess data function, we'll need to keep this step consistent for all our datasets
+def preprocess_data(df, selected_columns):
+    # Select only the chosen columns
+    df = df[selected_columns]
+    # Fill NA values with 0
+    df = df.fillna(0)
+    return df
+
+
+# Preprocess training and validation sets
+x_train_processed = preprocess_data(x_train, numeric_features)
+x_val_processed = preprocess_data(x_val, numeric_features)
+
+# Scale the features
 scaler = StandardScaler()
-x_train_scaled = scaler.fit_transform(x_train)
-x_val_scaled = scaler.transform(x_val)
+x_train_scaled = scaler.fit_transform(x_train_processed)
+x_val_scaled = scaler.transform(x_val_processed)
 
 # Create and train the model
 model = LinearRegression()
@@ -93,23 +84,14 @@ val_rmse = mean_squared_error(y_val, val_predictions, squared=False)
 train_r2 = r2_score(y_train, train_predictions)
 val_r2 = r2_score(y_val, val_predictions)
 
-## This initial model is not very accurate so the validation R2 will vary quite a bit
 print(f"Training RMSE: {train_rmse:.2f}")
 print(f"Validation RMSE: {val_rmse:.2f}")
 print(f"Training R²: {train_r2:.2f}")
 print(f"Validation R²: {val_r2:.2f}")
 
-# Make predictions on the test set
-## See how sample submission is structured
-print(sample_submission_df)
-
-## Check test set n/as
-test_df_original
-test_df.isna().sum()
-
-## Preprocess test set
-test_df = preprocess_data(test_df, features)
-test_scaled = scaler.transform(test_df)
+# Preprocess test set using the same selected columns
+test_processed = preprocess_data(test_df, numeric_features)
+test_scaled = scaler.transform(test_processed)
 test_predictions = model.predict(test_scaled)
 
 # Create submission file
