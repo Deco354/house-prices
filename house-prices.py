@@ -27,33 +27,46 @@ else:
     with ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_dir)
 
-data_df = pd.read_csv(data_dir / "train.csv")
-test_df = pd.read_csv(data_dir / "test.csv")
+data_df_original = pd.read_csv(data_dir / "train.csv", index_col="Id")
+test_df_original = pd.read_csv(data_dir / "test.csv", index_col="Id")
+data_df = data_df_original.copy()
+test_df = test_df_original.copy()
 sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
 
-# View Columns and select features and target variable
-
+# Create feature list only of numeric columns minus the Target variable
 data_df.columns
-features = ["GrLivArea", "YearBuilt", "FullBath", "BedroomAbvGr", "TotRmsAbvGrd"]
-x = data_df[features]
-data_df.GrLivArea.mean()
-data_df.GrLivArea.std()
-y = data_df.SalePrice
-x.describe()
+features = data_df.select_dtypes(include="number").columns
+features = features.drop("SalePrice")
 
-# Check if data has na values
-x.isna().sum()
+# Check for na values in all datasets
+all_data_df = pd.concat([data_df_original, test_df_original])
+na_feature_counts = all_data_df[features].isna().sum()
+na_feature_counts = na_feature_counts[na_feature_counts > 0]
+## LotFrontage and GarageYrBlt have a lot of na values so we'll drop them for now
+features = features.drop(["LotFrontage", "GarageYrBlt"])
 
-# Check for outliers
-data_df["GrLivArea"].hist()
-data_df["SalePrice"].hist()
-data_df["GrLivArea"].describe()
-data_df["SalePrice"].describe()
+
+## Fill na values with 0
+def handle_na(df):
+    return df.fillna(0)
+
+
+## Preprocess data
+def preprocess_data(df, columns):
+    df = df[columns]
+    df = handle_na(df)
+    return df
+
+
+selected_columns = list(features) + ["SalePrice"]
+data_df = preprocess_data(data_df, selected_columns)
 
 # Split the data into training and validation sets and check their distributions
 # It's important to split the data before scaling the features
 # because the scaler will use the training data to scale the features
 # and the validation data will be scaled using the training data statistics
+x = data_df.drop("SalePrice", axis=1)
+y = data_df["SalePrice"]
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 pd.concat([x_train, y_train], axis=1).describe()
 pd.concat([x_val, y_val], axis=1).describe()
@@ -90,14 +103,18 @@ print(f"Validation R²: {val_r2:.2f}")
 ## See how sample submission is structured
 print(sample_submission_df)
 
-## Make predictions on the test set
-x_test = test_df[features]
-x_test_scaled = scaler.transform(x_test)
-test_predictions = model.predict(x_test_scaled)
+## Check test set n/as
+test_df_original
+test_df.isna().sum()
+
+## Preprocess test set
+test_df = preprocess_data(test_df, features)
+test_scaled = scaler.transform(test_df)
+test_predictions = model.predict(test_scaled)
 
 # Create submission file
 submission_df = pd.DataFrame(
-    {"Id": test_df.Id, "SalePrice": test_predictions.flatten()}
+    {"Id": test_df.index, "SalePrice": test_predictions.flatten()}
 )
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
