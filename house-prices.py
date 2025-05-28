@@ -30,10 +30,8 @@ else:
     with ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_dir)
 
-data_df_original = pd.read_csv(data_dir / "train.csv", index_col="Id")
-test_df_original = pd.read_csv(data_dir / "test.csv", index_col="Id")
-data_df = data_df_original.copy()
-test_df = test_df_original.copy()
+data_df = pd.read_csv(data_dir / "train.csv", index_col="Id")
+test_df = pd.read_csv(data_dir / "test.csv", index_col="Id")
 sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
 
 # Split the data into training and validation sets before any preprocessing
