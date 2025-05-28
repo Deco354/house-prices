@@ -27,8 +27,8 @@ else:
     with ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_dir)
 
-data_df_original = pd.read_csv(data_dir / "train.csv")
-test_df_original = pd.read_csv(data_dir / "test.csv")
+data_df_original = pd.read_csv(data_dir / "train.csv", index_col="Id")
+test_df_original = pd.read_csv(data_dir / "test.csv", index_col="Id")
 data_df = data_df_original.copy()
 test_df = test_df_original.copy()
 sample_submission_df = pd.read_csv(data_dir / "sample_submission.csv")
@@ -114,7 +114,7 @@ test_predictions = model.predict(test_scaled)
 
 # Create submission file
 submission_df = pd.DataFrame(
-    {"Id": test_df.Id, "SalePrice": test_predictions.flatten()}
+    {"Id": test_df.index, "SalePrice": test_predictions.flatten()}
 )
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
