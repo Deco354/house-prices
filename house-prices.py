@@ -46,9 +46,16 @@ x_train, x_val, y_train, y_val = train_test_split(
 numeric_features = data_df.select_dtypes(include="number").columns
 numeric_features = numeric_features.drop("SalePrice")
 
-## Analyze NA values
-na_feature_counts = data_df[numeric_features].isna().sum()
-na_feature_counts = na_feature_counts[na_feature_counts > 0]
+
+# Analyze NA values
+def list_na_features(df):
+    na_feature_counts = df[numeric_features].isna().sum()
+    return na_feature_counts[na_feature_counts > 0]
+
+
+## Check there isn't a large discrepency in na values between training and test sets (there isn't)
+list_na_features(data_df)
+list_na_features(test_df)
 
 ## Drop features with too many NA values
 features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
