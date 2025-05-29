@@ -46,13 +46,54 @@ x_train, x_val, y_train, y_val = train_test_split(
 numeric_features = data_df.select_dtypes(include="number").columns
 numeric_features = numeric_features.drop("SalePrice")
 
-## Analyze NA values
-na_feature_counts = data_df[numeric_features].isna().sum()
-na_feature_counts = na_feature_counts[na_feature_counts > 0]
 
-## Drop features with too many NA values
-features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
-numeric_features = numeric_features.drop(features_to_drop)
+# Analyze NA values
+def list_na_features(df):
+    na_feature_counts = df[numeric_features].isna().sum()
+    return na_feature_counts[na_feature_counts > 0]
+
+
+## Check there isn't a large discrepency in na values between training and test sets (there isn't)
+list_na_features(data_df)
+list_na_features(test_df)
+
+## Take a look at features with significant na values
+### LotFrontage: Linear feet of street connected to property
+### This is a measure of the street connected to the property
+### It's possible that 0 values mean there is no street connected to the property or it could just be a missing value
+#### Having 0 lot frontage would likely be a negative factor in the sale price
+#### Let's compare the median sale price of properties with 0 lot frontage to the median sale price of properties with non-0 lot frontage
+
+not_na_lot_frontage_df = data_df[~data_df.LotFrontage.isna()]
+data_df.SalePrice.median()
+not_na_lot_frontage_df.SalePrice.median()
+
+#### The median sale prices aren't that different, meaning the na values are missing recordings rather than 0
+
+#### Apartments will often have 0 lot frontage, let's check if any exist within our dataset
+data_df.BldgType.unique()
+
+
+#### None of these are apartments, I think it's safe to assume these values are missing and not 0
+#### Meaning we should fill the na values with a median or mean value rather than 0.
+na_fill_values = {
+    "LotFrontage": x_train.LotFrontage.median(),
+}
+
+### MasVnrArea: Masonry veneer area in square feet
+#### Most values are zero
+data_df.MasVnrArea.describe()
+
+#### The MasVnrType can likely tell us if an na value is simply not recorded or if it's 0
+data_df.MasVnrType.value_counts(dropna=False)
+#### Let's sanity check that a Veneer area of 0 has a na MasVnrType (it does)
+data_df.MasVnrType[data_df.MasVnrArea == 0].value_counts(dropna=False)
+#### Let's check if the MasVnrType is na when the MasVnrArea is na (it is)
+data_df.MasVnrType[data_df.MasVnrArea.isna()].value_counts(dropna=False)
+
+#### Unlike LotFrontage, MasVnrArea is likely to be 0 when the value is missing
+#### Meaning we should fill the na values with 0
+na_fill_values["MasVnrArea"] = 0
 
 
 # Scale the features, only fit the scaler on training data
@@ -68,7 +109,8 @@ def preprocess_data(
     df, feature_column_names, scaler: StandardScaler, is_training: bool
 ):
     df = df[feature_column_names]
-    df = df.fillna(0)
+    df = df.fillna(na_fill_values)
+    df = df.fillna(x_train.mode().iloc[0])
     df = scale_data(df, scaler, is_training)
     return df
 
