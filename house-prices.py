@@ -110,7 +110,7 @@ def preprocess_data(
 ):
     df = df[feature_column_names]
     df = df.fillna(na_fill_values)
-    df = df.fillna(0)
+    df = df.fillna(x_train.mode().iloc[0])
     df = scale_data(df, scaler, is_training)
     return df
 
