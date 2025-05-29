@@ -72,8 +72,13 @@ not_na_lot_frontage_df.SalePrice.median()
 
 #### Apartments will often have 0 lot frontage, let's check if any exist within our dataset
 data_df.BldgType.unique()
-#### None of these are apartments, I think it's safe to assume these values are missing and not 0
 
+
+#### None of these are apartments, I think it's safe to assume these values are missing and not 0
+#### Meaning we should fill the na values with a median or mean value rather than 0.
+na_fill_values = {
+    "LotFrontage": x_train.LotFrontage.median(),
+}
 
 ## na_feature descriptions:
 ## GarageYrBlt: Year garage was built
@@ -81,8 +86,7 @@ data_df.BldgType.unique()
 
 
 ## Drop features with too many NA values
-features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
-numeric_features = numeric_features.drop(features_to_drop)
+numeric_features = numeric_features.drop("GarageYrBlt")
 
 
 # Scale the features, only fit the scaler on training data
@@ -98,6 +102,7 @@ def preprocess_data(
     df, feature_column_names, scaler: StandardScaler, is_training: bool
 ):
     df = df[feature_column_names]
+    df = df.fillna(na_fill_values)
     df = df.fillna(0)
     df = scale_data(df, scaler, is_training)
     return df
