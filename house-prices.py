@@ -57,6 +57,16 @@ def list_na_features(df):
 list_na_features(data_df)
 list_na_features(test_df)
 
+## Take a look at features with significant na values
+na_feature_names = list_na_features(data_df).index.to_list()
+na_feature_df = data_df[na_feature_names]
+na_feature_df.head()
+## na_feature descriptions:
+## LotFrontage: Linear feet of street connected to property
+## GarageYrBlt: Year garage was built
+## MasVnrArea: Masonry veneer area in square feet
+
+
 ## Drop features with too many NA values
 features_to_drop = ["LotFrontage", "GarageYrBlt"]  # Based on initial analysis
 numeric_features = numeric_features.drop(features_to_drop)
