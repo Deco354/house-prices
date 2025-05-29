@@ -80,13 +80,20 @@ na_fill_values = {
     "LotFrontage": x_train.LotFrontage.median(),
 }
 
-## na_feature descriptions:
-## GarageYrBlt: Year garage was built
-## MasVnrArea: Masonry veneer area in square feet
+### MasVnrArea: Masonry veneer area in square feet
+#### Most values are zero
+data_df.MasVnrArea.describe()
 
+#### The MasVnrType can likely tell us if an na value is simply not recorded or if it's 0
+data_df.MasVnrType.value_counts(dropna=False)
+#### Let's sanity check that a Veneer area of 0 has a na MasVnrType (it does)
+data_df.MasVnrType[data_df.MasVnrArea == 0].value_counts(dropna=False)
+#### Let's check if the MasVnrType is na when the MasVnrArea is na (it is)
+data_df.MasVnrType[data_df.MasVnrArea.isna()].value_counts(dropna=False)
 
-## Drop features with too many NA values
-numeric_features = numeric_features.drop("GarageYrBlt")
+#### Unlike LotFrontage, MasVnrArea is likely to be 0 when the value is missing
+#### Meaning we should fill the na values with 0
+na_fill_values["MasVnrArea"] = 0
 
 
 # Scale the features, only fit the scaler on training data
