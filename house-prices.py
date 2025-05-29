@@ -58,11 +58,24 @@ list_na_features(data_df)
 list_na_features(test_df)
 
 ## Take a look at features with significant na values
-na_feature_names = list_na_features(data_df).index.to_list()
-na_feature_df = data_df[na_feature_names]
-na_feature_df.head()
+### LotFrontage: Linear feet of street connected to property
+### This is a measure of the street connected to the property
+### It's possible that 0 values mean there is no street connected to the property or it could just be a missing value
+#### Having 0 lot frontage would likely be a negative factor in the sale price
+#### Let's compare the median sale price of properties with 0 lot frontage to the median sale price of properties with non-0 lot frontage
+
+not_na_lot_frontage_df = data_df[~data_df.LotFrontage.isna()]
+data_df.SalePrice.median()
+not_na_lot_frontage_df.SalePrice.median()
+
+#### The median sale prices aren't that different, meaning the na values are missing recordings rather than 0
+
+#### Apartments will often have 0 lot frontage, let's check if any exist within our dataset
+data_df.BldgType.unique()
+#### None of these are apartments, I think it's safe to assume these values are missing and not 0
+
+
 ## na_feature descriptions:
-## LotFrontage: Linear feet of street connected to property
 ## GarageYrBlt: Year garage was built
 ## MasVnrArea: Masonry veneer area in square feet
 
