@@ -7,12 +7,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import OneHotEncoder
 import os
 
-SHOULD_SUBMIT_TO_KAGGLE = True
+SHOULD_SUBMIT_TO_KAGGLE = False
 RANDOM_SEED = 42
 
 # Create data directory if it doesn't exist
@@ -78,8 +77,11 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-model = LinearRegression()
-# model = RandomForestRegressor(n_estimators=100, random_state=0)
+# Create Model
+## We're going to switch our model from LinearRegression to RandomForestRegressor
+## The category features made the LinearRegression model overfit to the training data we'll
+## likely need to engineer the category features before a LinearRegression model will work
+model = RandomForestRegressor(n_estimators=100, random_state=0)
 pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", model)])
 pipeline.fit(x_train, y_train)
 
