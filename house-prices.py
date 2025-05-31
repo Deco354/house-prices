@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import OneHotEncoder
 import os
 
@@ -103,9 +103,7 @@ print(f"Validation R²: {val_r2:.2f}")
 test_predictions = pipeline.predict(test_df)
 
 # Create submission file
-submission_df = pd.DataFrame(
-    {"Id": test_df.index, "SalePrice": test_predictions.flatten()}
-)
+submission_df = pd.DataFrame({"Id": test_df.index, "SalePrice": test_predictions})
 submission_csv = submission_df.to_csv("submission.csv", index=False)
 
 # Upload to Kaggle
