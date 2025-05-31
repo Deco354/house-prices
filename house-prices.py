@@ -1,13 +1,18 @@
 import pandas as pd
 from pathlib import Path
 from zipfile import ZipFile
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.preprocessing import OneHotEncoder
 import os
 
-SHOULD_SUBMIT_TO_KAGGLE = False
+SHOULD_SUBMIT_TO_KAGGLE = True
 RANDOM_SEED = 42
 
 # Create data directory if it doesn't exist
@@ -46,97 +51,41 @@ x_train, x_val, y_train, y_val = train_test_split(
 numeric_features = data_df.select_dtypes(include="number").columns
 numeric_features = numeric_features.drop("SalePrice")
 
+## Make a list of category features
+categorical_features = data_df.select_dtypes(include="object").columns
 
-# Analyze NA values
-def list_na_features(df):
-    na_feature_counts = df[numeric_features].isna().sum()
-    return na_feature_counts[na_feature_counts > 0]
-
-
-## Check there isn't a large discrepency in na values between training and test sets (there isn't)
-list_na_features(data_df)
-list_na_features(test_df)
-
-## Take a look at features with significant na values
-### LotFrontage: Linear feet of street connected to property
-### This is a measure of the street connected to the property
-### It's possible that 0 values mean there is no street connected to the property or it could just be a missing value
-#### Having 0 lot frontage would likely be a negative factor in the sale price
-#### Let's compare the median sale price of properties with 0 lot frontage to the median sale price of properties with non-0 lot frontage
-
-not_na_lot_frontage_df = data_df[~data_df.LotFrontage.isna()]
-data_df.SalePrice.median()
-not_na_lot_frontage_df.SalePrice.median()
-
-#### The median sale prices aren't that different, meaning the na values are missing recordings rather than 0
-
-#### Apartments will often have 0 lot frontage, let's check if any exist within our dataset
-data_df.BldgType.unique()
-
-
-#### None of these are apartments, I think it's safe to assume these values are missing and not 0
-#### Meaning we should fill the na values with a median or mean value rather than 0.
-na_fill_values = {
-    "LotFrontage": x_train.LotFrontage.median(),
-}
-
-### MasVnrArea: Masonry veneer area in square feet
-#### Most values are zero
-data_df.MasVnrArea.describe()
-
-#### The MasVnrType can likely tell us if an na value is simply not recorded or if it's 0
-data_df.MasVnrType.value_counts(dropna=False)
-#### Let's sanity check that a Veneer area of 0 has a na MasVnrType (it does)
-data_df.MasVnrType[data_df.MasVnrArea == 0].value_counts(dropna=False)
-#### Let's check if the MasVnrType is na when the MasVnrArea is na (it is)
-data_df.MasVnrType[data_df.MasVnrArea.isna()].value_counts(dropna=False)
-
-#### Unlike LotFrontage, MasVnrArea is likely to be 0 when the value is missing
-#### Meaning we should fill the na values with 0
-na_fill_values["MasVnrArea"] = 0
-
-
-# Scale the features, only fit the scaler on training data
-def scale_data(df, scaler: StandardScaler, is_training: bool):
-    if is_training:
-        return scaler.fit_transform(df)
-    else:
-        return scaler.transform(df)
-
-
-# Preprocess data function, we'll need to keep this step consistent for all our datasets
-def preprocess_data(
-    df, feature_column_names, scaler: StandardScaler, is_training: bool
-):
-    df = df[feature_column_names]
-    df = df.fillna(na_fill_values)
-    df = df.fillna(x_train.mode().iloc[0])
-    df = scale_data(df, scaler, is_training)
-    return df
-
-
-# Preprocess training and validation sets
-scaler = StandardScaler()
-x_train_processed = preprocess_data(
-    x_train,
-    numeric_features,
-    scaler,
-    is_training=True,
+# Create pipeline
+## Our preprocessing has grown sufficiently complex to justify using a pipeline
+numerical_transformer = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("scaler", StandardScaler()),
+    ]
 )
-x_val_processed = preprocess_data(
-    x_val,
-    numeric_features,
-    scaler,
-    is_training=False,
+categorical_transformer = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        (
+            "one_hot",
+            OneHotEncoder(drop="first", sparse_output=False, handle_unknown="ignore"),
+        ),
+    ]
+)
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", numerical_transformer, numeric_features),
+        ("cat", categorical_transformer, categorical_features),
+    ]
 )
 
-# Create and train the model
 model = LinearRegression()
-model.fit(x_train_processed, y_train)
+# model = RandomForestRegressor(n_estimators=100, random_state=0)
+pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", model)])
+pipeline.fit(x_train, y_train)
 
 # Make predictions
-train_predictions = model.predict(x_train_processed)
-val_predictions = model.predict(x_val_processed)
+train_predictions = pipeline.predict(x_train)
+val_predictions = pipeline.predict(x_val)
 
 # Calculate metrics
 train_rmse = mean_squared_error(y_train, train_predictions, squared=False)
@@ -149,14 +98,7 @@ print(f"Validation RMSE: {val_rmse:.2f}")
 print(f"Training R²: {train_r2:.2f}")
 print(f"Validation R²: {val_r2:.2f}")
 
-# Preprocess test set using the same selected columns
-test_processed = preprocess_data(
-    test_df,
-    numeric_features,
-    scaler,
-    is_training=False,
-)
-test_predictions = model.predict(test_processed)
+test_predictions = pipeline.predict(test_df)
 
 # Create submission file
 submission_df = pd.DataFrame(
