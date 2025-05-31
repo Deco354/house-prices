@@ -66,7 +66,7 @@ categorical_transformer = Pipeline(
         ("imputer", SimpleImputer(strategy="most_frequent")),
         (
             "one_hot",
-            OneHotEncoder(drop="first", sparse_output=False, handle_unknown="ignore"),
+            OneHotEncoder(sparse_output=False, handle_unknown="ignore"),
         ),
     ]
 )
